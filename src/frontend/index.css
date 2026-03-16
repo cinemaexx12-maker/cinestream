@@ -1,0 +1,128 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@font-face {
+  font-family: 'BricolageGrotesque';
+  src: url('/assets/fonts/BricolageGrotesque.woff2') format('woff2');
+  font-weight: 200 800;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Satoshi';
+  src: url('/assets/fonts/Satoshi.woff2') format('woff2');
+  font-weight: 300 700;
+  font-display: swap;
+}
+
+@layer base {
+  :root {
+    --radius: 0.5rem;
+    --background: 0.08 0 0;
+    --foreground: 0.96 0 0;
+    --card: 0.11 0 0;
+    --card-foreground: 0.96 0 0;
+    --popover: 0.13 0 0;
+    --popover-foreground: 0.96 0 0;
+    --primary: 0.53 0.218 25;
+    --primary-foreground: 0.98 0 0;
+    --secondary: 0.18 0 0;
+    --secondary-foreground: 0.85 0 0;
+    --muted: 0.16 0 0;
+    --muted-foreground: 0.55 0 0;
+    --accent: 0.53 0.218 25;
+    --accent-foreground: 0.98 0 0;
+    --destructive: 0.53 0.218 25;
+    --destructive-foreground: 0.98 0 0;
+    --border: 0.25 0 0;
+    --input: 0.22 0 0;
+    --ring: 0.53 0.218 25;
+    --chart-1: 0.53 0.218 25;
+    --chart-2: 0.6 0.118 184.704;
+    --chart-3: 0.769 0.188 70.08;
+    --chart-4: 0.627 0.265 303.9;
+    --chart-5: 0.645 0.246 16.439;
+    --sidebar: 0.1 0 0;
+    --sidebar-foreground: 0.96 0 0;
+    --sidebar-primary: 0.53 0.218 25;
+    --sidebar-primary-foreground: 0.98 0 0;
+    --sidebar-accent: 0.16 0 0;
+    --sidebar-accent-foreground: 0.85 0 0;
+    --sidebar-border: 0.22 0 0;
+    --sidebar-ring: 0.53 0.218 25;
+  }
+
+  * {
+    @apply border-border;
+  }
+
+  html {
+    color-scheme: dark;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+    font-family: 'Satoshi', sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'BricolageGrotesque', sans-serif;
+  }
+}
+
+@layer utilities {
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+
+  .hero-gradient {
+    background: linear-gradient(
+      to right,
+      rgba(10, 10, 10, 0.95) 30%,
+      rgba(10, 10, 10, 0.6) 60%,
+      rgba(10, 10, 10, 0.1) 100%
+    ),
+    linear-gradient(
+      to top,
+      rgba(10, 10, 10, 1) 0%,
+      rgba(10, 10, 10, 0.4) 40%,
+      transparent 70%
+    );
+  }
+
+  .skeleton-shimmer {
+    background: linear-gradient(
+      90deg,
+      oklch(0.14 0 0) 25%,
+      oklch(0.20 0 0) 50%,
+      oklch(0.14 0 0) 75%
+    );
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite;
+  }
+
+  @keyframes shimmer {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+  }
+
+  .nav-blur {
+    background: linear-gradient(
+      to bottom,
+      rgba(10, 10, 10, 0.95) 0%,
+      rgba(10, 10, 10, 0) 100%
+    );
+  }
+
+  .nav-solid {
+    background: rgba(10, 10, 10, 0.97);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+  }
+}
