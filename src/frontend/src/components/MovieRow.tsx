@@ -1,24 +1,18 @@
+import { Skeleton } from "@/components/ui/skeleton";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useRef } from "react";
-import type { Movie } from "../backend";
+import type { ContinueWatchingProgress, Movie } from "../backend";
 import MovieCard from "./MovieCard";
+import SectionHeader from "./SectionHeader";
 
-const SKELETON_KEYS = [
-  "sk-1",
-  "sk-2",
-  "sk-3",
-  "sk-4",
-  "sk-5",
-  "sk-6",
-  "sk-7",
-  "sk-8",
-];
+const SKELETON_KEYS = ["sk-1", "sk-2", "sk-3", "sk-4", "sk-5", "sk-6"];
 
 interface MovieRowProps {
   title: string;
+  label?: string;
   movies: Movie[];
   watchlistIds?: bigint[];
-  continueWatching?: [bigint, bigint][];
+  continueWatching?: ContinueWatchingProgress[];
   onWatchlistToggle?: (movie: Movie) => void;
   isLoggedIn?: boolean;
   isLoading?: boolean;
@@ -26,15 +20,19 @@ interface MovieRowProps {
 
 function SkeletonCard() {
   return (
-    <div className="flex-shrink-0 w-40 sm:w-44 md:w-48">
-      <div className="aspect-[2/3] rounded-md skeleton-shimmer" />
-      <div className="mt-2 h-3 w-3/4 rounded skeleton-shimmer" />
+    <div
+      className="flex-shrink-0 w-40 sm:w-44 md:w-48"
+      data-ocid="movie_card.loading_state"
+    >
+      <Skeleton className="aspect-[2/3] rounded-md skeleton-shimmer bg-transparent" />
+      <Skeleton className="mt-2 h-3 w-3/4 rounded skeleton-shimmer bg-transparent" />
     </div>
   );
 }
 
 export default function MovieRow({
   title,
+  label,
   movies,
   watchlistIds = [],
   continueWatching = [],
@@ -52,14 +50,15 @@ export default function MovieRow({
     });
   };
   const continueMap = new Map(
-    continueWatching.map(([id, prog]) => [id.toString(), Number(prog)]),
+    continueWatching.map((p) => [
+      p.movieId.toString(),
+      Number(p.progressSeconds),
+    ]),
   );
   if (!isLoading && movies.length === 0) return null;
   return (
     <section className="mb-10 group/row">
-      <h2 className="font-display font-bold text-xl sm:text-2xl text-foreground mb-4 px-4 sm:px-8">
-        {title}
-      </h2>
+      <SectionHeader title={title} label={label} />
       <div className="relative">
         <button
           type="button"
@@ -74,6 +73,7 @@ export default function MovieRow({
         <div
           ref={scrollRef}
           className="flex gap-3 overflow-x-auto scrollbar-hide px-4 sm:px-8 pb-4"
+          style={{ overflowY: "visible", WebkitOverflowScrolling: "touch" }}
         >
           {isLoading
             ? SKELETON_KEYS.map((k) => <SkeletonCard key={k} />)

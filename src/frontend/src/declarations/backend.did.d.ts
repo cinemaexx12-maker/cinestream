@@ -10,12 +10,17 @@ import type { ActorMethod } from '@icp-sdk/core/agent';
 import type { IDL } from '@icp-sdk/core/candid';
 import type { Principal } from '@icp-sdk/core/principal';
 
+export interface ContinueWatchingProgress {
+  'movieId' : bigint,
+  'progressSeconds' : bigint,
+}
 export interface Movie {
   'id' : bigint,
   'categories' : Array<string>,
   'title' : string,
   'duration' : bigint,
   'thumbnailUrl' : string,
+  'isPremium' : boolean,
   'year' : bigint,
   'description' : string,
   'isFeatured' : boolean,
@@ -28,6 +33,7 @@ export interface MovieInput {
   'title' : string,
   'duration' : bigint,
   'thumbnailUrl' : string,
+  'isPremium' : boolean,
   'year' : bigint,
   'description' : string,
   'isFeatured' : boolean,
@@ -35,30 +41,86 @@ export interface MovieInput {
   'rating' : number,
   'videoUrl' : string,
 }
-export interface UserProfile { 'name' : string }
+export interface ShoppingItem {
+  'productName' : string,
+  'currency' : string,
+  'quantity' : bigint,
+  'priceInCents' : bigint,
+  'productDescription' : string,
+}
+export interface StripeConfiguration {
+  'allowedCountries' : Array<string>,
+  'secretKey' : string,
+}
+export type StripeSessionStatus = {
+    'completed' : { 'userPrincipal' : [] | [string], 'response' : string }
+  } |
+  { 'failed' : { 'error' : string } };
+export interface Subscription {
+  'expiryDate' : bigint,
+  'plan' : string,
+  'paymentId' : string,
+  'startDate' : bigint,
+}
+export interface TransformationInput {
+  'context' : Uint8Array,
+  'response' : http_request_result,
+}
+export interface TransformationOutput {
+  'status' : bigint,
+  'body' : Uint8Array,
+  'headers' : Array<http_header>,
+}
+export interface UserProfile { 'displayName' : string, 'avatarUrl' : string }
 export type UserRole = { 'admin' : null } |
   { 'user' : null } |
   { 'guest' : null };
+export interface http_header { 'value' : string, 'name' : string }
+export interface http_request_result {
+  'status' : bigint,
+  'body' : Uint8Array,
+  'headers' : Array<http_header>,
+}
 export interface _SERVICE {
   '_initializeAccessControlWithSecret' : ActorMethod<[string], undefined>,
   'addMovie' : ActorMethod<[MovieInput], bigint>,
+  'addToTMDBWatchlist' : ActorMethod<[bigint], undefined>,
   'addToWatchlist' : ActorMethod<[bigint], undefined>,
   'assignCallerUserRole' : ActorMethod<[Principal, UserRole], undefined>,
+  'cancelSubscription' : ActorMethod<[], undefined>,
+  'createCheckoutSession' : ActorMethod<
+    [Array<ShoppingItem>, string, string],
+    string
+  >,
   'deleteMovie' : ActorMethod<[bigint], undefined>,
   'getAllMovies' : ActorMethod<[], Array<Movie>>,
   'getCallerUserProfile' : ActorMethod<[], [] | [UserProfile]>,
   'getCallerUserRole' : ActorMethod<[], UserRole>,
-  'getContinueWatching' : ActorMethod<[], Array<[bigint, bigint]>>,
+  'getContinueWatching' : ActorMethod<[], Array<ContinueWatchingProgress>>,
   'getFeaturedMovies' : ActorMethod<[], Array<Movie>>,
   'getMovieById' : ActorMethod<[bigint], Movie>,
   'getMoviesByCategory' : ActorMethod<[string], Array<Movie>>,
+  'getPremiumMovies' : ActorMethod<[], Array<Movie>>,
+  'getStripeSessionStatus' : ActorMethod<[string], StripeSessionStatus>,
+  'getSubscription' : ActorMethod<[], [] | [Subscription]>,
+  'getTMDBWatchlistIds' : ActorMethod<[], Array<bigint>>,
+  'getTopGenres' : ActorMethod<[], Array<bigint>>,
   'getUserProfile' : ActorMethod<[Principal], [] | [UserProfile]>,
   'getWatchlistIds' : ActorMethod<[], Array<bigint>>,
   'initialize' : ActorMethod<[], undefined>,
   'isCallerAdmin' : ActorMethod<[], boolean>,
+  'isStripeConfigured' : ActorMethod<[], boolean>,
+  'recordGenreInteraction' : ActorMethod<[Array<bigint>, bigint], undefined>,
+  'removeContinueWatching' : ActorMethod<[bigint], undefined>,
+  'removeFromTMDBWatchlist' : ActorMethod<[bigint], undefined>,
   'removeFromWatchlist' : ActorMethod<[bigint], undefined>,
+  'reorderTMDBWatchlist' : ActorMethod<[Array<bigint>], undefined>,
+  'reorderWatchlist' : ActorMethod<[Array<bigint>], undefined>,
   'saveCallerUserProfile' : ActorMethod<[UserProfile], undefined>,
+  'saveSubscription' : ActorMethod<[Subscription], undefined>,
   'searchMoviesByTitle' : ActorMethod<[string], Array<Movie>>,
+  'setStripeConfiguration' : ActorMethod<[StripeConfiguration], undefined>,
+  'transform' : ActorMethod<[TransformationInput], TransformationOutput>,
   'updateContinueWatching' : ActorMethod<[bigint, bigint], undefined>,
   'updateMovie' : ActorMethod<[bigint, MovieInput], undefined>,
 }

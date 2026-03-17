@@ -5,13 +5,19 @@ import AuthModal from "../components/AuthModal";
 import Footer from "../components/Footer";
 import HeroBanner from "../components/HeroBanner";
 import MovieRow from "../components/MovieRow";
+import MyWatchlistRow from "../components/MyWatchlistRow";
 import Navbar from "../components/Navbar";
-import { FEATURED_MOVIE, SAMPLE_MOVIES } from "../data/sampleMovies";
+import RecommendedRow from "../components/RecommendedRow";
+import TMDBCategoryRow from "../components/TMDBCategoryRow";
+import TMDBGenreRow from "../components/TMDBGenreRow";
+import TMDBHeroBanner from "../components/TMDBHeroBanner";
+import TMDBTrendingRow from "../components/TMDBTrendingRow";
+import Top10TrendingRow from "../components/Top10TrendingRow";
 import { useInternetIdentity } from "../hooks/useInternetIdentity";
 import {
+  useAllMovies,
   useContinueWatching,
   useFeaturedMovies,
-  useMoviesByCategory,
   useWatchlistIds,
   useWatchlistMutations,
 } from "../hooks/useQueries";
@@ -22,26 +28,15 @@ export default function HomePage() {
   const isLoggedIn = loginStatus === "success" && !!identity;
 
   const featuredQuery = useFeaturedMovies();
-  const trendingQuery = useMoviesByCategory("trending");
-  const seriesQuery = useMoviesByCategory("web_series");
-  const latestQuery = useMoviesByCategory("latest");
-  const topRatedQuery = useMoviesByCategory("top_rated");
+  const allMoviesQuery = useAllMovies();
   const watchlistIdsQuery = useWatchlistIds();
   const continueWatchingQuery = useContinueWatching();
   const { addToWatchlist, removeFromWatchlist } = useWatchlistMutations();
 
-  const featuredMovie =
-    featuredQuery.data?.[0] ??
-    SAMPLE_MOVIES.find((m) => m.isFeatured) ??
-    FEATURED_MOVIE;
-
-  const getMovies = (
-    query: { data?: Movie[]; isLoading: boolean },
-    category: string,
-  ): Movie[] => {
-    if (query.data && query.data.length > 0) return query.data;
-    return SAMPLE_MOVIES.filter((m) => m.categories.includes(category));
-  };
+  const featuredMovies: Movie[] =
+    featuredQuery.data && featuredQuery.data.length > 0
+      ? featuredQuery.data
+      : [];
 
   const watchlistIds = watchlistIdsQuery.data ?? [];
 
@@ -63,65 +58,74 @@ export default function HomePage() {
     }
   };
 
-  const continueWatchingPairs = continueWatchingQuery.data ?? [];
-  const continueMovies = continueWatchingPairs
-    .map(([id]) => SAMPLE_MOVIES.find((m) => m.id === id))
+  const continueWatchingEntries = continueWatchingQuery.data ?? [];
+  const allMovies = allMoviesQuery.data ?? [];
+  const continueMovies = continueWatchingEntries
+    .map((entry) => allMovies.find((m) => m.id === entry.movieId))
     .filter(Boolean) as Movie[];
 
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
-      <HeroBanner
-        movie={featuredMovie}
-        isInWatchlist={watchlistIds.some((id) => id === featuredMovie.id)}
-        onWatchlistToggle={() => handleWatchlistToggle(featuredMovie)}
-        isLoggedIn={isLoggedIn}
-      />
+      {featuredMovies.length > 0 ? (
+        <HeroBanner
+          movies={featuredMovies}
+          isInWatchlist={(id) => watchlistIds.some((wid) => wid === id)}
+          onWatchlistToggle={handleWatchlistToggle}
+          isLoggedIn={isLoggedIn}
+        />
+      ) : (
+        <TMDBHeroBanner />
+      )}
+
       <main className="py-8">
+        {/* 1. Top 10 Trending — Netflix-style ranked row */}
+        <Top10TrendingRow />
+
+        {/* 2. Continue Watching — only when logged in with progress */}
         {isLoggedIn && continueMovies.length > 0 && (
           <MovieRow
             title="Continue Watching"
+            label="RESUME"
             movies={continueMovies}
             watchlistIds={watchlistIds}
-            continueWatching={continueWatchingPairs}
+            continueWatching={continueWatchingEntries}
             onWatchlistToggle={handleWatchlistToggle}
             isLoggedIn={isLoggedIn}
           />
         )}
-        <MovieRow
-          title="Trending Now"
-          movies={getMovies(trendingQuery, "trending")}
-          watchlistIds={watchlistIds}
-          onWatchlistToggle={handleWatchlistToggle}
-          isLoggedIn={isLoggedIn}
-          isLoading={trendingQuery.isLoading}
-        />
-        <MovieRow
-          title="Popular Web Series"
-          movies={getMovies(seriesQuery, "web_series")}
-          watchlistIds={watchlistIds}
-          onWatchlistToggle={handleWatchlistToggle}
-          isLoggedIn={isLoggedIn}
-          isLoading={seriesQuery.isLoading}
-        />
-        <MovieRow
-          title="Latest Releases"
-          movies={getMovies(latestQuery, "latest")}
-          watchlistIds={watchlistIds}
-          onWatchlistToggle={handleWatchlistToggle}
-          isLoggedIn={isLoggedIn}
-          isLoading={latestQuery.isLoading}
-        />
-        <MovieRow
-          title="Top Rated"
-          movies={getMovies(topRatedQuery, "top_rated")}
-          watchlistIds={watchlistIds}
-          onWatchlistToggle={handleWatchlistToggle}
-          isLoggedIn={isLoggedIn}
-          isLoading={topRatedQuery.isLoading}
-        />
+
+        {/* 3. Recommended For You — only when logged in */}
+        <RecommendedRow />
+
+        {/* 4. My Watchlist — only when logged in and has items */}
+        <MyWatchlistRow />
+
+        {/* 5. Trending Now */}
+        <TMDBTrendingRow />
+
+        {/* 6. Popular Movies */}
+        <TMDBCategoryRow title="Popular Movies" category="popular" />
+
+        {/* 7. Top Rated */}
+        <TMDBCategoryRow title="Top Rated Movies" category="top_rated" />
+
+        {/* 8. Latest Releases */}
+        <TMDBCategoryRow title="Latest Releases" category="now_playing" />
+
+        {/* 9. Genre rows */}
+        <TMDBGenreRow title="Action Movies" genreId={28} />
+        <TMDBGenreRow title="Comedy Movies" genreId={35} />
+        <TMDBGenreRow title="Horror Movies" genreId={27} />
+        <TMDBGenreRow title="Sci-Fi Movies" genreId={878} />
+        <TMDBGenreRow title="Romance Movies" genreId={10749} />
+
+        {/* 10. Upcoming */}
+        <TMDBCategoryRow title="Upcoming Movies" category="upcoming" />
       </main>
+
       <Footer />
+
       <AuthModal
         open={authModalOpen}
         onClose={() => setAuthModalOpen(false)}

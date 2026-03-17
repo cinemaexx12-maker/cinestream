@@ -89,24 +89,23 @@ export class ExternalBlob {
         return this;
     }
 }
-export interface Movie {
-    id: bigint;
-    categories: Array<string>;
-    title: string;
-    duration: bigint;
-    thumbnailUrl: string;
-    year: bigint;
-    description: string;
-    isFeatured: boolean;
-    genre: string;
-    rating: number;
-    videoUrl: string;
+export interface Subscription {
+    expiryDate: bigint;
+    plan: string;
+    paymentId: string;
+    startDate: bigint;
+}
+export interface http_request_result {
+    status: bigint;
+    body: Uint8Array;
+    headers: Array<http_header>;
 }
 export interface MovieInput {
     categories: Array<string>;
     title: string;
     duration: bigint;
     thumbnailUrl: string;
+    isPremium: boolean;
     year: bigint;
     description: string;
     isFeatured: boolean;
@@ -114,7 +113,62 @@ export interface MovieInput {
     rating: number;
     videoUrl: string;
 }
+export interface TransformationOutput {
+    status: bigint;
+    body: Uint8Array;
+    headers: Array<http_header>;
+}
+export interface ShoppingItem {
+    productName: string;
+    currency: string;
+    quantity: bigint;
+    priceInCents: bigint;
+    productDescription: string;
+}
+export interface Movie {
+    id: bigint;
+    categories: Array<string>;
+    title: string;
+    duration: bigint;
+    thumbnailUrl: string;
+    isPremium: boolean;
+    year: bigint;
+    description: string;
+    isFeatured: boolean;
+    genre: string;
+    rating: number;
+    videoUrl: string;
+}
+export interface TransformationInput {
+    context: Uint8Array;
+    response: http_request_result;
+}
+export interface ContinueWatchingProgress {
+    movieId: bigint;
+    progressSeconds: bigint;
+}
+export type StripeSessionStatus = {
+    __kind__: "completed";
+    completed: {
+        userPrincipal?: string;
+        response: string;
+    };
+} | {
+    __kind__: "failed";
+    failed: {
+        error: string;
+    };
+};
+export interface StripeConfiguration {
+    allowedCountries: Array<string>;
+    secretKey: string;
+}
 export interface UserProfile {
+    displayName: string;
+    avatarUrl: string;
+}
+export interface http_header {
+    value: string;
     name: string;
 }
 export enum UserRole {
@@ -125,27 +179,44 @@ export enum UserRole {
 export interface backendInterface {
     _initializeAccessControlWithSecret(userSecret: string): Promise<void>;
     addMovie(input: MovieInput): Promise<bigint>;
+    addToTMDBWatchlist(tmdbMovieId: bigint): Promise<void>;
     addToWatchlist(movieId: bigint): Promise<void>;
     assignCallerUserRole(user: Principal, role: UserRole): Promise<void>;
+    cancelSubscription(): Promise<void>;
+    createCheckoutSession(items: Array<ShoppingItem>, successUrl: string, cancelUrl: string): Promise<string>;
     deleteMovie(id: bigint): Promise<void>;
     getAllMovies(): Promise<Array<Movie>>;
     getCallerUserProfile(): Promise<UserProfile | null>;
     getCallerUserRole(): Promise<UserRole>;
-    getContinueWatching(): Promise<Array<[bigint, bigint]>>;
+    getContinueWatching(): Promise<Array<ContinueWatchingProgress>>;
     getFeaturedMovies(): Promise<Array<Movie>>;
     getMovieById(id: bigint): Promise<Movie>;
     getMoviesByCategory(category: string): Promise<Array<Movie>>;
+    getPremiumMovies(): Promise<Array<Movie>>;
+    getStripeSessionStatus(sessionId: string): Promise<StripeSessionStatus>;
+    getSubscription(): Promise<Subscription | null>;
+    getTMDBWatchlistIds(): Promise<Array<bigint>>;
+    getTopGenres(): Promise<Array<bigint>>;
     getUserProfile(user: Principal): Promise<UserProfile | null>;
     getWatchlistIds(): Promise<Array<bigint>>;
     initialize(): Promise<void>;
     isCallerAdmin(): Promise<boolean>;
+    isStripeConfigured(): Promise<boolean>;
+    recordGenreInteraction(genreIds: Array<bigint>, weight: bigint): Promise<void>;
+    removeContinueWatching(movieId: bigint): Promise<void>;
+    removeFromTMDBWatchlist(tmdbMovieId: bigint): Promise<void>;
     removeFromWatchlist(movieId: bigint): Promise<void>;
+    reorderTMDBWatchlist(newOrder: Array<bigint>): Promise<void>;
+    reorderWatchlist(newOrder: Array<bigint>): Promise<void>;
     saveCallerUserProfile(profile: UserProfile): Promise<void>;
+    saveSubscription(subscription: Subscription): Promise<void>;
     searchMoviesByTitle(title: string): Promise<Array<Movie>>;
+    setStripeConfiguration(config: StripeConfiguration): Promise<void>;
+    transform(input: TransformationInput): Promise<TransformationOutput>;
     updateContinueWatching(movieId: bigint, progress: bigint): Promise<void>;
     updateMovie(id: bigint, input: MovieInput): Promise<void>;
 }
-import type { UserProfile as _UserProfile, UserRole as _UserRole } from "./declarations/backend.did.d.ts";
+import type { StripeSessionStatus as _StripeSessionStatus, Subscription as _Subscription, UserProfile as _UserProfile, UserRole as _UserRole } from "./declarations/backend.did.d.ts";
 export class Backend implements backendInterface {
     constructor(private actor: ActorSubclass<_SERVICE>, private _uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, private _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, private processError?: (error: unknown) => never){}
     async _initializeAccessControlWithSecret(arg0: string): Promise<void> {
@@ -176,6 +247,20 @@ export class Backend implements backendInterface {
             return result;
         }
     }
+    async addToTMDBWatchlist(arg0: bigint): Promise<void> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.addToTMDBWatchlist(arg0);
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.addToTMDBWatchlist(arg0);
+            return result;
+        }
+    }
     async addToWatchlist(arg0: bigint): Promise<void> {
         if (this.processError) {
             try {
@@ -201,6 +286,34 @@ export class Backend implements backendInterface {
             }
         } else {
             const result = await this.actor.assignCallerUserRole(arg0, to_candid_UserRole_n1(this._uploadFile, this._downloadFile, arg1));
+            return result;
+        }
+    }
+    async cancelSubscription(): Promise<void> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.cancelSubscription();
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.cancelSubscription();
+            return result;
+        }
+    }
+    async createCheckoutSession(arg0: Array<ShoppingItem>, arg1: string, arg2: string): Promise<string> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.createCheckoutSession(arg0, arg1, arg2);
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.createCheckoutSession(arg0, arg1, arg2);
             return result;
         }
     }
@@ -260,7 +373,7 @@ export class Backend implements backendInterface {
             return from_candid_UserRole_n4(this._uploadFile, this._downloadFile, result);
         }
     }
-    async getContinueWatching(): Promise<Array<[bigint, bigint]>> {
+    async getContinueWatching(): Promise<Array<ContinueWatchingProgress>> {
         if (this.processError) {
             try {
                 const result = await this.actor.getContinueWatching();
@@ -313,6 +426,76 @@ export class Backend implements backendInterface {
             }
         } else {
             const result = await this.actor.getMoviesByCategory(arg0);
+            return result;
+        }
+    }
+    async getPremiumMovies(): Promise<Array<Movie>> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.getPremiumMovies();
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.getPremiumMovies();
+            return result;
+        }
+    }
+    async getStripeSessionStatus(arg0: string): Promise<StripeSessionStatus> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.getStripeSessionStatus(arg0);
+                return from_candid_StripeSessionStatus_n6(this._uploadFile, this._downloadFile, result);
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.getStripeSessionStatus(arg0);
+            return from_candid_StripeSessionStatus_n6(this._uploadFile, this._downloadFile, result);
+        }
+    }
+    async getSubscription(): Promise<Subscription | null> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.getSubscription();
+                return from_candid_opt_n10(this._uploadFile, this._downloadFile, result);
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.getSubscription();
+            return from_candid_opt_n10(this._uploadFile, this._downloadFile, result);
+        }
+    }
+    async getTMDBWatchlistIds(): Promise<Array<bigint>> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.getTMDBWatchlistIds();
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.getTMDBWatchlistIds();
+            return result;
+        }
+    }
+    async getTopGenres(): Promise<Array<bigint>> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.getTopGenres();
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.getTopGenres();
             return result;
         }
     }
@@ -372,6 +555,62 @@ export class Backend implements backendInterface {
             return result;
         }
     }
+    async isStripeConfigured(): Promise<boolean> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.isStripeConfigured();
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.isStripeConfigured();
+            return result;
+        }
+    }
+    async recordGenreInteraction(arg0: Array<bigint>, arg1: bigint): Promise<void> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.recordGenreInteraction(arg0, arg1);
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.recordGenreInteraction(arg0, arg1);
+            return result;
+        }
+    }
+    async removeContinueWatching(arg0: bigint): Promise<void> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.removeContinueWatching(arg0);
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.removeContinueWatching(arg0);
+            return result;
+        }
+    }
+    async removeFromTMDBWatchlist(arg0: bigint): Promise<void> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.removeFromTMDBWatchlist(arg0);
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.removeFromTMDBWatchlist(arg0);
+            return result;
+        }
+    }
     async removeFromWatchlist(arg0: bigint): Promise<void> {
         if (this.processError) {
             try {
@@ -383,6 +622,34 @@ export class Backend implements backendInterface {
             }
         } else {
             const result = await this.actor.removeFromWatchlist(arg0);
+            return result;
+        }
+    }
+    async reorderTMDBWatchlist(arg0: Array<bigint>): Promise<void> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.reorderTMDBWatchlist(arg0);
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.reorderTMDBWatchlist(arg0);
+            return result;
+        }
+    }
+    async reorderWatchlist(arg0: Array<bigint>): Promise<void> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.reorderWatchlist(arg0);
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.reorderWatchlist(arg0);
             return result;
         }
     }
@@ -400,6 +667,20 @@ export class Backend implements backendInterface {
             return result;
         }
     }
+    async saveSubscription(arg0: Subscription): Promise<void> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.saveSubscription(arg0);
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.saveSubscription(arg0);
+            return result;
+        }
+    }
     async searchMoviesByTitle(arg0: string): Promise<Array<Movie>> {
         if (this.processError) {
             try {
@@ -411,6 +692,34 @@ export class Backend implements backendInterface {
             }
         } else {
             const result = await this.actor.searchMoviesByTitle(arg0);
+            return result;
+        }
+    }
+    async setStripeConfiguration(arg0: StripeConfiguration): Promise<void> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.setStripeConfiguration(arg0);
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.setStripeConfiguration(arg0);
+            return result;
+        }
+    }
+    async transform(arg0: TransformationInput): Promise<TransformationOutput> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.transform(arg0);
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.transform(arg0);
             return result;
         }
     }
@@ -443,11 +752,32 @@ export class Backend implements backendInterface {
         }
     }
 }
+function from_candid_StripeSessionStatus_n6(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _StripeSessionStatus): StripeSessionStatus {
+    return from_candid_variant_n7(_uploadFile, _downloadFile, value);
+}
 function from_candid_UserRole_n4(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _UserRole): UserRole {
     return from_candid_variant_n5(_uploadFile, _downloadFile, value);
 }
+function from_candid_opt_n10(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: [] | [_Subscription]): Subscription | null {
+    return value.length === 0 ? null : value[0];
+}
 function from_candid_opt_n3(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: [] | [_UserProfile]): UserProfile | null {
     return value.length === 0 ? null : value[0];
+}
+function from_candid_opt_n9(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: [] | [string]): string | null {
+    return value.length === 0 ? null : value[0];
+}
+function from_candid_record_n8(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
+    userPrincipal: [] | [string];
+    response: string;
+}): {
+    userPrincipal?: string;
+    response: string;
+} {
+    return {
+        userPrincipal: record_opt_to_undefined(from_candid_opt_n9(_uploadFile, _downloadFile, value.userPrincipal)),
+        response: value.response
+    };
 }
 function from_candid_variant_n5(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
     admin: null;
@@ -457,6 +787,35 @@ function from_candid_variant_n5(_uploadFile: (file: ExternalBlob) => Promise<Uin
     guest: null;
 }): UserRole {
     return "admin" in value ? UserRole.admin : "user" in value ? UserRole.user : "guest" in value ? UserRole.guest : value;
+}
+function from_candid_variant_n7(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
+    completed: {
+        userPrincipal: [] | [string];
+        response: string;
+    };
+} | {
+    failed: {
+        error: string;
+    };
+}): {
+    __kind__: "completed";
+    completed: {
+        userPrincipal?: string;
+        response: string;
+    };
+} | {
+    __kind__: "failed";
+    failed: {
+        error: string;
+    };
+} {
+    return "completed" in value ? {
+        __kind__: "completed",
+        completed: from_candid_record_n8(_uploadFile, _downloadFile, value.completed)
+    } : "failed" in value ? {
+        __kind__: "failed",
+        failed: value.failed
+    } : value;
 }
 function to_candid_UserRole_n1(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: UserRole): _UserRole {
     return to_candid_variant_n2(_uploadFile, _downloadFile, value);

@@ -20,7 +20,7 @@ import {
 } from "@/components/ui/table";
 import { Textarea } from "@/components/ui/textarea";
 import { useNavigate } from "@tanstack/react-router";
-import { Edit2, Loader2, Plus, Shield, Trash2 } from "lucide-react";
+import { Crown, Edit2, Loader2, Plus, Shield, Trash2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import type { Movie, MovieInput } from "../backend";
@@ -45,6 +45,7 @@ const emptyForm: Omit<MovieInput, "year" | "duration"> & {
   thumbnailUrl: "",
   videoUrl: "",
   isFeatured: false,
+  isPremium: false,
   categories: [],
 };
 
@@ -61,6 +62,7 @@ function toFormState(movie: Movie): FormState {
     thumbnailUrl: movie.thumbnailUrl,
     videoUrl: movie.videoUrl,
     isFeatured: movie.isFeatured,
+    isPremium: movie.isPremium,
     categories: movie.categories,
     categoriesStr: movie.categories.join(", "),
   };
@@ -118,6 +120,7 @@ export default function AdminPage() {
       thumbnailUrl: form.thumbnailUrl.trim(),
       videoUrl: form.videoUrl.trim(),
       isFeatured: form.isFeatured,
+      isPremium: form.isPremium,
       categories: form.categoriesStr
         .split(",")
         .map((c) => c.trim())
@@ -234,7 +237,7 @@ export default function AdminPage() {
                     Rating
                   </TableHead>
                   <TableHead className="text-muted-foreground hidden md:table-cell">
-                    Featured
+                    Flags
                   </TableHead>
                   <TableHead className="text-muted-foreground text-right">
                     Actions
@@ -279,13 +282,30 @@ export default function AdminPage() {
                       </span>
                     </TableCell>
                     <TableCell className="hidden md:table-cell">
-                      {movie.isFeatured ? (
-                        <span className="text-xs bg-primary/20 text-primary px-2 py-0.5 rounded-full">
-                          Featured
-                        </span>
-                      ) : (
-                        <span className="text-xs text-muted-foreground">—</span>
-                      )}
+                      <div className="flex flex-col gap-1">
+                        {movie.isFeatured && (
+                          <span className="text-xs bg-primary/20 text-primary px-2 py-0.5 rounded-full w-fit">
+                            Featured
+                          </span>
+                        )}
+                        {movie.isPremium && (
+                          <span
+                            className="text-xs px-2 py-0.5 rounded-full w-fit font-bold"
+                            style={{
+                              background:
+                                "linear-gradient(135deg, #FFD700 0%, #FF6B00 100%)",
+                              color: "#000",
+                            }}
+                          >
+                            Premium
+                          </span>
+                        )}
+                        {!movie.isFeatured && !movie.isPremium && (
+                          <span className="text-xs text-muted-foreground">
+                            —
+                          </span>
+                        )}
+                      </div>
                     </TableCell>
                     <TableCell className="text-right">
                       <div className="flex items-center justify-end gap-2">
@@ -472,6 +492,24 @@ export default function AdminPage() {
                 className="text-foreground cursor-pointer"
               >
                 Feature this movie on the homepage banner
+              </Label>
+            </div>
+
+            <div className="sm:col-span-2 flex items-center gap-3">
+              <Switch
+                data-ocid="admin.premium_content.switch"
+                checked={form.isPremium}
+                onCheckedChange={(checked) =>
+                  setForm((f) => ({ ...f, isPremium: checked }))
+                }
+                id="premium-switch"
+              />
+              <Label
+                htmlFor="premium-switch"
+                className="text-foreground cursor-pointer flex items-center gap-2"
+              >
+                <Crown className="w-4 h-4 text-yellow-400" />
+                Premium Content (requires subscription)
               </Label>
             </div>
           </div>

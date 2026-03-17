@@ -13,6 +13,7 @@ export const MovieInput = IDL.Record({
   'title' : IDL.Text,
   'duration' : IDL.Nat,
   'thumbnailUrl' : IDL.Text,
+  'isPremium' : IDL.Bool,
   'year' : IDL.Nat,
   'description' : IDL.Text,
   'isFeatured' : IDL.Bool,
@@ -25,12 +26,20 @@ export const UserRole = IDL.Variant({
   'user' : IDL.Null,
   'guest' : IDL.Null,
 });
+export const ShoppingItem = IDL.Record({
+  'productName' : IDL.Text,
+  'currency' : IDL.Text,
+  'quantity' : IDL.Nat,
+  'priceInCents' : IDL.Nat,
+  'productDescription' : IDL.Text,
+});
 export const Movie = IDL.Record({
   'id' : IDL.Nat,
   'categories' : IDL.Vec(IDL.Text),
   'title' : IDL.Text,
   'duration' : IDL.Nat,
   'thumbnailUrl' : IDL.Text,
+  'isPremium' : IDL.Bool,
   'year' : IDL.Nat,
   'description' : IDL.Text,
   'isFeatured' : IDL.Bool,
@@ -38,25 +47,79 @@ export const Movie = IDL.Record({
   'rating' : IDL.Float64,
   'videoUrl' : IDL.Text,
 });
-export const UserProfile = IDL.Record({ 'name' : IDL.Text });
+export const UserProfile = IDL.Record({
+  'displayName' : IDL.Text,
+  'avatarUrl' : IDL.Text,
+});
+export const ContinueWatchingProgress = IDL.Record({
+  'movieId' : IDL.Nat,
+  'progressSeconds' : IDL.Nat,
+});
+export const StripeSessionStatus = IDL.Variant({
+  'completed' : IDL.Record({
+    'userPrincipal' : IDL.Opt(IDL.Text),
+    'response' : IDL.Text,
+  }),
+  'failed' : IDL.Record({ 'error' : IDL.Text }),
+});
+export const Subscription = IDL.Record({
+  'expiryDate' : IDL.Int,
+  'plan' : IDL.Text,
+  'paymentId' : IDL.Text,
+  'startDate' : IDL.Int,
+});
+export const StripeConfiguration = IDL.Record({
+  'allowedCountries' : IDL.Vec(IDL.Text),
+  'secretKey' : IDL.Text,
+});
+export const http_header = IDL.Record({
+  'value' : IDL.Text,
+  'name' : IDL.Text,
+});
+export const http_request_result = IDL.Record({
+  'status' : IDL.Nat,
+  'body' : IDL.Vec(IDL.Nat8),
+  'headers' : IDL.Vec(http_header),
+});
+export const TransformationInput = IDL.Record({
+  'context' : IDL.Vec(IDL.Nat8),
+  'response' : http_request_result,
+});
+export const TransformationOutput = IDL.Record({
+  'status' : IDL.Nat,
+  'body' : IDL.Vec(IDL.Nat8),
+  'headers' : IDL.Vec(http_header),
+});
 
 export const idlService = IDL.Service({
   '_initializeAccessControlWithSecret' : IDL.Func([IDL.Text], [], []),
   'addMovie' : IDL.Func([MovieInput], [IDL.Nat], []),
+  'addToTMDBWatchlist' : IDL.Func([IDL.Nat], [], []),
   'addToWatchlist' : IDL.Func([IDL.Nat], [], []),
   'assignCallerUserRole' : IDL.Func([IDL.Principal, UserRole], [], []),
+  'cancelSubscription' : IDL.Func([], [], []),
+  'createCheckoutSession' : IDL.Func(
+      [IDL.Vec(ShoppingItem), IDL.Text, IDL.Text],
+      [IDL.Text],
+      [],
+    ),
   'deleteMovie' : IDL.Func([IDL.Nat], [], []),
   'getAllMovies' : IDL.Func([], [IDL.Vec(Movie)], ['query']),
   'getCallerUserProfile' : IDL.Func([], [IDL.Opt(UserProfile)], ['query']),
   'getCallerUserRole' : IDL.Func([], [UserRole], ['query']),
   'getContinueWatching' : IDL.Func(
       [],
-      [IDL.Vec(IDL.Tuple(IDL.Nat, IDL.Nat))],
+      [IDL.Vec(ContinueWatchingProgress)],
       ['query'],
     ),
   'getFeaturedMovies' : IDL.Func([], [IDL.Vec(Movie)], ['query']),
   'getMovieById' : IDL.Func([IDL.Nat], [Movie], ['query']),
   'getMoviesByCategory' : IDL.Func([IDL.Text], [IDL.Vec(Movie)], ['query']),
+  'getPremiumMovies' : IDL.Func([], [IDL.Vec(Movie)], ['query']),
+  'getStripeSessionStatus' : IDL.Func([IDL.Text], [StripeSessionStatus], []),
+  'getSubscription' : IDL.Func([], [IDL.Opt(Subscription)], ['query']),
+  'getTMDBWatchlistIds' : IDL.Func([], [IDL.Vec(IDL.Nat)], ['query']),
+  'getTopGenres' : IDL.Func([], [IDL.Vec(IDL.Nat)], ['query']),
   'getUserProfile' : IDL.Func(
       [IDL.Principal],
       [IDL.Opt(UserProfile)],
@@ -65,9 +128,22 @@ export const idlService = IDL.Service({
   'getWatchlistIds' : IDL.Func([], [IDL.Vec(IDL.Nat)], ['query']),
   'initialize' : IDL.Func([], [], []),
   'isCallerAdmin' : IDL.Func([], [IDL.Bool], ['query']),
+  'isStripeConfigured' : IDL.Func([], [IDL.Bool], ['query']),
+  'recordGenreInteraction' : IDL.Func([IDL.Vec(IDL.Nat), IDL.Nat], [], []),
+  'removeContinueWatching' : IDL.Func([IDL.Nat], [], []),
+  'removeFromTMDBWatchlist' : IDL.Func([IDL.Nat], [], []),
   'removeFromWatchlist' : IDL.Func([IDL.Nat], [], []),
+  'reorderTMDBWatchlist' : IDL.Func([IDL.Vec(IDL.Nat)], [], []),
+  'reorderWatchlist' : IDL.Func([IDL.Vec(IDL.Nat)], [], []),
   'saveCallerUserProfile' : IDL.Func([UserProfile], [], []),
+  'saveSubscription' : IDL.Func([Subscription], [], []),
   'searchMoviesByTitle' : IDL.Func([IDL.Text], [IDL.Vec(Movie)], ['query']),
+  'setStripeConfiguration' : IDL.Func([StripeConfiguration], [], []),
+  'transform' : IDL.Func(
+      [TransformationInput],
+      [TransformationOutput],
+      ['query'],
+    ),
   'updateContinueWatching' : IDL.Func([IDL.Nat, IDL.Nat], [], []),
   'updateMovie' : IDL.Func([IDL.Nat, MovieInput], [], []),
 });
@@ -80,6 +156,7 @@ export const idlFactory = ({ IDL }) => {
     'title' : IDL.Text,
     'duration' : IDL.Nat,
     'thumbnailUrl' : IDL.Text,
+    'isPremium' : IDL.Bool,
     'year' : IDL.Nat,
     'description' : IDL.Text,
     'isFeatured' : IDL.Bool,
@@ -92,12 +169,20 @@ export const idlFactory = ({ IDL }) => {
     'user' : IDL.Null,
     'guest' : IDL.Null,
   });
+  const ShoppingItem = IDL.Record({
+    'productName' : IDL.Text,
+    'currency' : IDL.Text,
+    'quantity' : IDL.Nat,
+    'priceInCents' : IDL.Nat,
+    'productDescription' : IDL.Text,
+  });
   const Movie = IDL.Record({
     'id' : IDL.Nat,
     'categories' : IDL.Vec(IDL.Text),
     'title' : IDL.Text,
     'duration' : IDL.Nat,
     'thumbnailUrl' : IDL.Text,
+    'isPremium' : IDL.Bool,
     'year' : IDL.Nat,
     'description' : IDL.Text,
     'isFeatured' : IDL.Bool,
@@ -105,25 +190,76 @@ export const idlFactory = ({ IDL }) => {
     'rating' : IDL.Float64,
     'videoUrl' : IDL.Text,
   });
-  const UserProfile = IDL.Record({ 'name' : IDL.Text });
+  const UserProfile = IDL.Record({
+    'displayName' : IDL.Text,
+    'avatarUrl' : IDL.Text,
+  });
+  const ContinueWatchingProgress = IDL.Record({
+    'movieId' : IDL.Nat,
+    'progressSeconds' : IDL.Nat,
+  });
+  const StripeSessionStatus = IDL.Variant({
+    'completed' : IDL.Record({
+      'userPrincipal' : IDL.Opt(IDL.Text),
+      'response' : IDL.Text,
+    }),
+    'failed' : IDL.Record({ 'error' : IDL.Text }),
+  });
+  const Subscription = IDL.Record({
+    'expiryDate' : IDL.Int,
+    'plan' : IDL.Text,
+    'paymentId' : IDL.Text,
+    'startDate' : IDL.Int,
+  });
+  const StripeConfiguration = IDL.Record({
+    'allowedCountries' : IDL.Vec(IDL.Text),
+    'secretKey' : IDL.Text,
+  });
+  const http_header = IDL.Record({ 'value' : IDL.Text, 'name' : IDL.Text });
+  const http_request_result = IDL.Record({
+    'status' : IDL.Nat,
+    'body' : IDL.Vec(IDL.Nat8),
+    'headers' : IDL.Vec(http_header),
+  });
+  const TransformationInput = IDL.Record({
+    'context' : IDL.Vec(IDL.Nat8),
+    'response' : http_request_result,
+  });
+  const TransformationOutput = IDL.Record({
+    'status' : IDL.Nat,
+    'body' : IDL.Vec(IDL.Nat8),
+    'headers' : IDL.Vec(http_header),
+  });
   
   return IDL.Service({
     '_initializeAccessControlWithSecret' : IDL.Func([IDL.Text], [], []),
     'addMovie' : IDL.Func([MovieInput], [IDL.Nat], []),
+    'addToTMDBWatchlist' : IDL.Func([IDL.Nat], [], []),
     'addToWatchlist' : IDL.Func([IDL.Nat], [], []),
     'assignCallerUserRole' : IDL.Func([IDL.Principal, UserRole], [], []),
+    'cancelSubscription' : IDL.Func([], [], []),
+    'createCheckoutSession' : IDL.Func(
+        [IDL.Vec(ShoppingItem), IDL.Text, IDL.Text],
+        [IDL.Text],
+        [],
+      ),
     'deleteMovie' : IDL.Func([IDL.Nat], [], []),
     'getAllMovies' : IDL.Func([], [IDL.Vec(Movie)], ['query']),
     'getCallerUserProfile' : IDL.Func([], [IDL.Opt(UserProfile)], ['query']),
     'getCallerUserRole' : IDL.Func([], [UserRole], ['query']),
     'getContinueWatching' : IDL.Func(
         [],
-        [IDL.Vec(IDL.Tuple(IDL.Nat, IDL.Nat))],
+        [IDL.Vec(ContinueWatchingProgress)],
         ['query'],
       ),
     'getFeaturedMovies' : IDL.Func([], [IDL.Vec(Movie)], ['query']),
     'getMovieById' : IDL.Func([IDL.Nat], [Movie], ['query']),
     'getMoviesByCategory' : IDL.Func([IDL.Text], [IDL.Vec(Movie)], ['query']),
+    'getPremiumMovies' : IDL.Func([], [IDL.Vec(Movie)], ['query']),
+    'getStripeSessionStatus' : IDL.Func([IDL.Text], [StripeSessionStatus], []),
+    'getSubscription' : IDL.Func([], [IDL.Opt(Subscription)], ['query']),
+    'getTMDBWatchlistIds' : IDL.Func([], [IDL.Vec(IDL.Nat)], ['query']),
+    'getTopGenres' : IDL.Func([], [IDL.Vec(IDL.Nat)], ['query']),
     'getUserProfile' : IDL.Func(
         [IDL.Principal],
         [IDL.Opt(UserProfile)],
@@ -132,9 +268,22 @@ export const idlFactory = ({ IDL }) => {
     'getWatchlistIds' : IDL.Func([], [IDL.Vec(IDL.Nat)], ['query']),
     'initialize' : IDL.Func([], [], []),
     'isCallerAdmin' : IDL.Func([], [IDL.Bool], ['query']),
+    'isStripeConfigured' : IDL.Func([], [IDL.Bool], ['query']),
+    'recordGenreInteraction' : IDL.Func([IDL.Vec(IDL.Nat), IDL.Nat], [], []),
+    'removeContinueWatching' : IDL.Func([IDL.Nat], [], []),
+    'removeFromTMDBWatchlist' : IDL.Func([IDL.Nat], [], []),
     'removeFromWatchlist' : IDL.Func([IDL.Nat], [], []),
+    'reorderTMDBWatchlist' : IDL.Func([IDL.Vec(IDL.Nat)], [], []),
+    'reorderWatchlist' : IDL.Func([IDL.Vec(IDL.Nat)], [], []),
     'saveCallerUserProfile' : IDL.Func([UserProfile], [], []),
+    'saveSubscription' : IDL.Func([Subscription], [], []),
     'searchMoviesByTitle' : IDL.Func([IDL.Text], [IDL.Vec(Movie)], ['query']),
+    'setStripeConfiguration' : IDL.Func([StripeConfiguration], [], []),
+    'transform' : IDL.Func(
+        [TransformationInput],
+        [TransformationOutput],
+        ['query'],
+      ),
     'updateContinueWatching' : IDL.Func([IDL.Nat, IDL.Nat], [], []),
     'updateMovie' : IDL.Func([IDL.Nat, MovieInput], [], []),
   });

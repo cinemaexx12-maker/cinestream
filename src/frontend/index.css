@@ -59,6 +59,7 @@
 
   html {
     color-scheme: dark;
+    scroll-behavior: smooth;
   }
 
   body {
@@ -69,6 +70,11 @@
 
   h1, h2, h3, h4, h5, h6 {
     font-family: 'BricolageGrotesque', sans-serif;
+  }
+
+  ::selection {
+    background: rgba(229, 9, 20, 0.4);
+    color: #fff;
   }
 }
 
@@ -100,11 +106,11 @@
     background: linear-gradient(
       90deg,
       oklch(0.14 0 0) 25%,
-      oklch(0.20 0 0) 50%,
+      oklch(0.22 0 0) 50%,
       oklch(0.14 0 0) 75%
     );
     background-size: 200% 100%;
-    animation: shimmer 1.5s infinite;
+    animation: shimmer 1.6s ease-in-out infinite;
   }
 
   @keyframes shimmer {
@@ -124,5 +130,139 @@
     background: rgba(10, 10, 10, 0.97);
     backdrop-filter: blur(12px);
     border-bottom: 1px solid rgba(255,255,255,0.05);
+  }
+
+  /* Cinematic card hover effect */
+  .card-glow-hover {
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+  }
+  .card-glow-hover:hover {
+    transform: translateY(-4px) scale(1.03);
+    box-shadow:
+      0 8px 30px rgba(229, 9, 20, 0.25),
+      0 4px 15px rgba(0, 0, 0, 0.5),
+      0 24px 80px rgba(0, 0, 0, 0.9);
+  }
+
+  /* OTT Section header styles */
+  .ott-section-label {
+    font-size: 0.6rem;
+    font-weight: 800;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: #e50914;
+    padding: 2px 7px;
+    border: 1px solid rgba(229, 9, 20, 0.45);
+    border-radius: 3px;
+    background: rgba(229, 9, 20, 0.08);
+    font-family: 'Satoshi', sans-serif;
+    line-height: 1.6;
+  }
+
+  .ott-section-title {
+    font-family: 'BricolageGrotesque', sans-serif;
+    font-weight: 800;
+    font-size: clamp(1.2rem, 2.5vw, 1.6rem);
+    color: oklch(var(--foreground));
+    text-shadow: 0 0 20px rgba(229, 9, 20, 0.3), 0 0 40px rgba(229, 9, 20, 0.1);
+    line-height: 1.2;
+  }
+
+  .ott-see-all {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: oklch(var(--muted-foreground));
+    cursor: pointer;
+    transition: color 0.2s ease;
+    letter-spacing: 0.02em;
+  }
+  .ott-see-all:hover {
+    color: #e50914;
+  }
+
+  @keyframes page-fade-in {
+    from { opacity: 0; transform: translateY(8px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  .page-transition {
+    animation: page-fade-in 0.35s ease-out forwards;
+  }
+
+  @keyframes spin-slow {
+    to { transform: rotate(360deg); }
+  }
+
+  .animate-spin-slow {
+    animation: spin-slow 1s linear infinite;
+  }
+
+  @keyframes loading-fade-out {
+    0%   { opacity: 1; }
+    80%  { opacity: 1; }
+    100% { opacity: 0; pointer-events: none; }
+  }
+
+  .loading-screen-fadeout {
+    animation: loading-fade-out 1.8s ease-out forwards;
+  }
+
+  @keyframes hero-crossfade {
+    0%   { opacity: 0; }
+    100% { opacity: 1; }
+  }
+
+  .hero-slide-enter {
+    animation: hero-crossfade 0.8s ease-out forwards;
+  }
+}
+
+@layer utilities {
+  @keyframes trailerPreviewIn {
+    from {
+      opacity: 0;
+      transform: translateY(6px) scale(0.97);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
+  }
+
+  @keyframes previewSpin {
+    to { transform: rotate(360deg); }
+  }
+}
+
+@layer utilities {
+  /* GPU accelerated scroll containers */
+  .scroll-gpu {
+    transform: translateZ(0);
+    will-change: transform;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* Reduce animations on mobile/touch devices */
+  @media (hover: none) {
+    .card-glow-hover {
+      transform: none !important;
+      box-shadow: none !important;
+    }
+    [class*="animate-"] {
+      animation-duration: 0s !important;
+    }
+    .transition-transform {
+      transition: none !important;
+    }
+  }
+
+  /* Respect user preference for reduced motion */
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      transition-duration: 0.01ms !important;
+    }
   }
 }

@@ -13,6 +13,7 @@ export const SAMPLE_MOVIES: Movie[] = [
     thumbnailUrl: "/assets/generated/movie-dark-chronicles.dim_300x450.jpg",
     videoUrl: "",
     isFeatured: true,
+    isPremium: false,
     categories: ["trending", "top_rated"],
   },
   {
@@ -27,6 +28,7 @@ export const SAMPLE_MOVIES: Movie[] = [
     thumbnailUrl: "/assets/generated/movie-crimson-eclipse.dim_300x450.jpg",
     videoUrl: "",
     isFeatured: false,
+    isPremium: false,
     categories: ["trending", "latest"],
   },
   {
@@ -41,6 +43,7 @@ export const SAMPLE_MOVIES: Movie[] = [
     thumbnailUrl: "/assets/generated/movie-apex-predator.dim_300x450.jpg",
     videoUrl: "",
     isFeatured: false,
+    isPremium: false,
     categories: ["trending", "latest"],
   },
   {
@@ -55,6 +58,7 @@ export const SAMPLE_MOVIES: Movie[] = [
     thumbnailUrl: "/assets/generated/movie-neon-abyss.dim_300x450.jpg",
     videoUrl: "",
     isFeatured: false,
+    isPremium: false,
     categories: ["top_rated"],
   },
   {
@@ -69,6 +73,7 @@ export const SAMPLE_MOVIES: Movie[] = [
     thumbnailUrl: "/assets/generated/movie-silent-storm.dim_300x450.jpg",
     videoUrl: "",
     isFeatured: false,
+    isPremium: false,
     categories: ["top_rated"],
   },
   {
@@ -83,6 +88,7 @@ export const SAMPLE_MOVIES: Movie[] = [
     thumbnailUrl: "/assets/generated/movie-quantum-shift.dim_300x450.jpg",
     videoUrl: "",
     isFeatured: false,
+    isPremium: false,
     categories: ["latest", "trending"],
   },
   {
@@ -97,6 +103,7 @@ export const SAMPLE_MOVIES: Movie[] = [
     thumbnailUrl: "/assets/generated/series-empire-files.dim_300x450.jpg",
     videoUrl: "",
     isFeatured: false,
+    isPremium: false,
     categories: ["web_series"],
   },
   {
@@ -111,6 +118,7 @@ export const SAMPLE_MOVIES: Movie[] = [
     thumbnailUrl: "/assets/generated/series-blood-kingdom.dim_300x450.jpg",
     videoUrl: "",
     isFeatured: false,
+    isPremium: false,
     categories: ["web_series", "top_rated"],
   },
   {
@@ -125,6 +133,7 @@ export const SAMPLE_MOVIES: Movie[] = [
     thumbnailUrl: "/assets/generated/series-city-shadows.dim_300x450.jpg",
     videoUrl: "",
     isFeatured: false,
+    isPremium: false,
     categories: ["web_series"],
   },
   {
@@ -139,6 +148,7 @@ export const SAMPLE_MOVIES: Movie[] = [
     thumbnailUrl: "",
     videoUrl: "",
     isFeatured: false,
+    isPremium: false,
     categories: ["latest"],
   },
   {
@@ -153,6 +163,7 @@ export const SAMPLE_MOVIES: Movie[] = [
     thumbnailUrl: "",
     videoUrl: "",
     isFeatured: false,
+    isPremium: false,
     categories: ["top_rated", "trending"],
   },
   {
@@ -167,6 +178,7 @@ export const SAMPLE_MOVIES: Movie[] = [
     thumbnailUrl: "",
     videoUrl: "",
     isFeatured: false,
+    isPremium: false,
     categories: ["latest"],
   },
 ];
